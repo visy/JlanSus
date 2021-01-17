@@ -9,6 +9,7 @@ namespace Mirror.JlanSus
     [RequireComponent(typeof(BoxCollider2D), typeof(Rigidbody2D))]
     public class JlanPlayer : NetworkBehaviour
     {
+        // based on CharacterController2D by prime31 - Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0) 
        	#region internal types
         struct CharacterRaycastOrigins
         {
