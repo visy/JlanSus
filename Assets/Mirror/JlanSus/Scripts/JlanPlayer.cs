@@ -3,6 +3,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using TMPro;
+using SuperTiled2Unity;
 
 namespace Mirror.JlanSus
 {
@@ -241,6 +242,8 @@ namespace Mirror.JlanSus
 
         public void OnTriggerEnter2D( Collider2D col )
         {
+            Debug.Log("onTriggerEnter:" + col.gameObject.GetComponent<SuperObject>().m_Type);
+            
             if( onTriggerEnterEvent != null )
                 onTriggerEnterEvent( col );
         }
