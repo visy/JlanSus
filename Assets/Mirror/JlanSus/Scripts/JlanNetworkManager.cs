@@ -31,6 +31,9 @@ namespace Mirror.JlanSus
 
             player.layer = 9; // players layer
 
+            // setup roles
+            player.GetComponent<JlanPlayer>().isLanittaja = true;
+
             NetworkServer.AddPlayerForConnection(conn, player);
 
 //                ball = Instantiate(spawnPrefabs.Find(prefab => prefab.name == "Ball"));

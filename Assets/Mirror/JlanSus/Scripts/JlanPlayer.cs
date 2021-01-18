@@ -164,7 +164,13 @@ namespace Mirror.JlanSus
         [SyncVar(hook = "OnNick")]
         public string nick;
 
+        [SyncVar(hook = "OnRole")]
+        public bool isLanittaja;
+
         public string hatName;
+
+        public int standingOnTaskNum = -1;
+        public bool doingTask = false;
         
         public float speed = 30;
 
@@ -214,6 +220,11 @@ namespace Mirror.JlanSus
                 nick = PlayerPrefs.GetString("nick", "Defaultti");
                 SetNick();
 
+                if (!isLanittaja) 
+                {
+                    // hide lanittaja hud texts, show impostor ones
+                }
+
             } 
 
             CmdSetNick(nick);
@@ -243,7 +254,23 @@ namespace Mirror.JlanSus
         public void OnTriggerEnter2D( Collider2D col )
         {
             Debug.Log("onTriggerEnter:" + col.gameObject.GetComponent<SuperObject>().m_Type);
-            
+            var type = col.gameObject.GetComponent<SuperObject>().m_Type;
+
+            if (type.StartsWith("Task")) {
+                var num = Int32.Parse(type.Substring("Task".Length));
+                standingOnTaskNum = num;
+
+                if (isLocalPlayer) 
+                {
+                    if (isLanittaja) 
+                    {
+                        var text = GetChildWithName(gameObject, "LanittajaPress1");
+                        text.SetActive(true);
+                    }
+                }
+
+            }
+
             if( onTriggerEnterEvent != null )
                 onTriggerEnterEvent( col );
         }
@@ -258,6 +285,23 @@ namespace Mirror.JlanSus
 
         public void OnTriggerExit2D( Collider2D col )
         {
+            var type = col.gameObject.GetComponent<SuperObject>().m_Type;
+
+            if (type.StartsWith("Task")) {
+                standingOnTaskNum = -1;
+
+                doingTask = false;
+
+                if (isLocalPlayer) 
+                {
+                    if (isLanittaja) 
+                    {
+                        var text = GetChildWithName(gameObject, "LanittajaPress1");
+                        text.SetActive(false);
+                    }
+                }
+            }
+
             if( onTriggerExitEvent != null )
                 onTriggerExitEvent( col );
         }
@@ -342,6 +386,11 @@ namespace Mirror.JlanSus
             SetNick();
         }
 
+        public void OnRole(bool o, bool n)
+        {
+            SetRole();
+        }
+
         [Command]
         void CmdSetNick(string n) 
         {
@@ -354,29 +403,64 @@ namespace Mirror.JlanSus
             sign.GetComponent<TextMeshPro>().SetText(nick);
         }
 
+
+        [Command]
+        void CmdSetRole(bool _isLanittaja) 
+        {
+            isLanittaja = _isLanittaja;
+        }
+
+        void SetRole() 
+        {
+            // role setup
+        }
+
         // need to use FixedUpdate for rigidbody
         void FixedUpdate()
         {
             // only let the local player control the player.
             if (isLocalPlayer) 
             {
-                float h = Input.GetAxisRaw("Horizontal");
-                float v = Input.GetAxisRaw("Vertical");
+                
+                // INPUT & PHYSICS
+                if (!doingTask) 
+                {
+                    float h = Input.GetAxisRaw("Horizontal");
+                    float v = Input.GetAxisRaw("Vertical");
 
-                Vector3 m;
-                m.x = h;
-                m.y = v;
-                m.z = 0;
-                m.Normalize();
+                    Vector3 m;
+                    m.x = h;
+                    m.y = v;
+                    m.z = 0;
+                    m.Normalize();
 
-                if (h != 0 || v != 0) transform.right = m;
+                    if (h != 0 || v != 0) transform.right = m;
 
-                m *= speed * Time.fixedDeltaTime;
+                    m *= speed * Time.fixedDeltaTime;
 
-                move(m);
-//                rigidbody2d.velocity = move;
-                rigidbody2d.freezeRotation = true;
-                gameObject.transform.rotation = Quaternion.identity;
+                    move(m);
+    //                rigidbody2d.velocity = move;
+                    rigidbody2d.freezeRotation = true;
+                    gameObject.transform.rotation = Quaternion.identity;
+
+                    if (Input.GetKey("1"))
+                    {
+                        doingTask = true;
+                    }
+                } else 
+                {
+                    if (Input.GetKey("1"))
+                    {
+                        doingTask = false;
+                    }
+
+                }
+
+                // debug
+                var sign = GetChildWithName(gameObject, "NameSign");
+                sign.GetComponent<TextMeshPro>().SetText(nick + (doingTask ? " / working:" + standingOnTaskNum : (standingOnTaskNum >= 0) ? " / onTask:" + standingOnTaskNum : ""));
+
+
             }
         }
 
