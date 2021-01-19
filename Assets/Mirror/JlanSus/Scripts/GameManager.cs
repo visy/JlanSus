@@ -15,7 +15,7 @@ namespace Mirror.JlanSus
         End,
     };
 
-    public class GameTimer : NetworkBehaviour 
+    public class GameManager : NetworkBehaviour 
     {
         [SyncVar] 
         public float gameTime; // The length of a game, in seconds.
@@ -42,7 +42,7 @@ namespace Mirror.JlanSus
             }
         }
 
-        GameTimer serverTimer;
+        GameManager serverTimer;
 
         void Start() 
         {
@@ -57,7 +57,7 @@ namespace Mirror.JlanSus
             } 
             else if (isLocalPlayer) // For all the boring old clients to do: get the host's timer.
             { 
-                GameTimer[] timers = FindObjectsOfType<GameTimer>();
+                GameManager[] timers = FindObjectsOfType<GameManager>();
                 for(int i =0; i<timers.Length; i++)
                 {
                     if(timers[i].masterTimer)
@@ -65,6 +65,56 @@ namespace Mirror.JlanSus
                         serverTimer = timers[i];
                     }
                 }
+            }
+        }
+
+        void CheckVotes() 
+        {
+            var votes = new Dictionary<int,int>();
+            for(var i = 0;i < 16;i++) 
+            {
+                votes[i] = 0;
+            }
+
+            var voteCount = 0;
+            var playerCount = NetworkServer.connections.Count;
+
+            var players = GameObject.FindGameObjectsWithTag("Player");
+
+            foreach(var player in players) 
+            {
+                var voteIndex = player.GetComponent<JlanPlayer>().currentVote;
+                var nick = player.GetComponent<JlanPlayer>().nick;
+                if (voteIndex >= 0) 
+                {
+                    votes[voteIndex]++;
+                    voteCount++;
+                }
+            }
+
+            Debug.Log("current votes given: " + voteCount + "/" + playerCount);
+
+            if (voteCount >= playerCount) 
+            {
+                var largest = -1;
+                var largestIndex = -1;
+                for(var i=0;i<16;i++) {
+                    if (votes[i] > largest) 
+                    {
+                        largest = votes[i];
+                        largestIndex = i;
+                    }
+                }
+
+                if (largest > 0 && largestIndex > 0 && (float)largest > (float)(playerCount/2.0f)) 
+                {
+                    Debug.Log("EVICTED *** " + largestIndex + " with " + largest + " votes.");
+                } 
+                else {
+                    Debug.Log("Nobody was evicted.");
+                }
+
+                Mirror.JlanSus.JlanPlayer.MeetingComplete?.Invoke(true);
             }
         }
 
@@ -77,14 +127,24 @@ namespace Mirror.JlanSus
         [ClientRpc]
         void RpcStateChange(GameState newState) 
         {
+            if (!isServer) return;
             _currentState = newState;
             timer = -1;
 
             Debug.Log("Changing state to: " + newState);
+
         }
-        
+
+        [Command(ignoreAuthority = true)]
+        public void CmdUpdateVotes() 
+        {
+            if (!isServer) return;
+            CheckVotes();
+        }
+
         void Update()
         {
+
             if(masterTimer) // Only the MASTER timer controls the time
             { 
                 if (timer>=gameTime)
@@ -118,7 +178,7 @@ namespace Mirror.JlanSus
                 } 
                 else // Maybe we don't have it yet?
                 { 
-                    GameTimer[] timers = FindObjectsOfType<GameTimer>();
+                    GameManager[] timers = FindObjectsOfType<GameManager>();
                     for(int i =0; i<timers.Length; i++)
                     {
                         if(timers[i].masterTimer)

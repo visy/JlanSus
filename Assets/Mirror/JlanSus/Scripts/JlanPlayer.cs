@@ -169,6 +169,9 @@ namespace Mirror.JlanSus
         [SyncVar(hook = "OnRole")]
         public bool isLanittaja;
 
+        [SyncVar]
+        public int currentVote = -1;
+
         public string hatName;
 
         public int standingOnTaskNum = -1;
@@ -206,6 +209,8 @@ namespace Mirror.JlanSus
 
         public static Action<bool> MeetingComplete;
 
+        public static Action<int> CastVote;
+
         private List<int> assignedTasks = new List<int>() {
             1,2,3
         };
@@ -218,6 +223,8 @@ namespace Mirror.JlanSus
         {
             var s = GameObject.Find("NetworkManager").GetComponent<JlanNetworkManager>().playerSpawn;
             gameObject.transform.position = new Vector3(UnityEngine.Random.Range(s.rect.xMin, s.rect.xMax), UnityEngine.Random.Range(s.rect.yMin, s.rect.yMax), 0) + s.transform.position;
+
+            currentVote = -1;
         }
 
         public override void OnStartServer() 
@@ -277,6 +284,7 @@ namespace Mirror.JlanSus
             TaskComplete += OnTaskComplete;
 
             MeetingComplete += OnMeetingComplete;
+            CastVote += OnCastVote;
 
             gameManager = GameObject.Find("GameManager");
         }
@@ -473,6 +481,28 @@ namespace Mirror.JlanSus
             // role setup
         }
 
+        void OnCastVote(int vote) 
+        {
+            CmdCastVote(vote);
+        }
+
+        [Command]
+        void CmdCastVote(int vote) 
+        {
+            RpcCastVote(vote);
+        }
+
+        [ClientRpc]
+        void RpcCastVote(int vote)
+        {
+            currentVote = vote;
+
+            if (isServer) 
+            {
+                gameManager.GetComponent<GameManager>().CmdUpdateVotes();
+            }
+        }
+
         void OnTaskAbort(bool result) 
         {
             CloseTask();
@@ -496,7 +526,7 @@ namespace Mirror.JlanSus
             var text = GetChildWithName(gameObject, "LanittajaPress1");
             text.SetActive(false);
 
-            gameManager.GetComponent<GameTimer>().CmdChangeState(GameState.Freeroam);
+            gameManager.GetComponent<GameManager>().CmdChangeState(GameState.Freeroam);
         }
 
         // additively load other scenes for the task minigames
@@ -548,7 +578,7 @@ namespace Mirror.JlanSus
             // only let the local player control the player.
             if (isLocalPlayer) 
             {
-                var state = gameManager.GetComponent<GameTimer>().CurrentState;
+                var state = gameManager.GetComponent<GameManager>().CurrentState;
        
                 // INPUT & PHYSICS in freeroam mode
                 if (!doingTask && state == GameState.Freeroam)  
@@ -581,8 +611,8 @@ namespace Mirror.JlanSus
                     // check for meeting call
                     if (Input.GetKey("1") && standingOnMeetingCall)
                     {
-                        // call 90 second meeting
-                        gameManager.GetComponent<GameTimer>().CmdChangeState(GameState.Meeting);
+                        // call meeting
+                        gameManager.GetComponent<GameManager>().CmdChangeState(GameState.Meeting);
                         meetingLoaded = false;
                     }
                 } 
