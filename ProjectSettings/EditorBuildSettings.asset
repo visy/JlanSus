@@ -8,4 +8,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Mirror/JlanSus/Scenes/JlanScene.unity
     guid: 2336eba9d3ffc6448b084d3a0f23550e
+  - enabled: 1
+    path: Assets/Mirror/JlanSus/Scenes/TaskScene1.unity
+    guid: 96eb2a728cced3f41a4bd34ae64edc89
+  - enabled: 1
+    path: Assets/Mirror/JlanSus/Scenes/MeetingScene.unity
+    guid: ef9868c3fc57f4e489b51e6398d732d8
   m_configObjects: {}

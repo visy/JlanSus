@@ -173,8 +173,12 @@ namespace Mirror.JlanSus
 
         public int standingOnTaskNum = -1;
         public bool doingTask = false;
-        
+
+        public bool standingOnMeetingCall = false;
+
         public float speed = 30;
+
+        private bool meetingLoaded = false;
 
         [HideInInspector][NonSerialized]
         public new Transform transform;
@@ -200,11 +204,21 @@ namespace Mirror.JlanSus
         public static Action<bool> TaskAbort;
         public static Action<bool> TaskComplete;
 
+        public static Action<bool> MeetingComplete;
+
         private List<int> assignedTasks = new List<int>() {
             1,2,3
         };
 
         private List<int> completedTasks = new List<int>();
+
+        private GameObject gameManager;
+
+        public void Respawn() 
+        {
+            var s = GameObject.Find("NetworkManager").GetComponent<JlanNetworkManager>().playerSpawn;
+            gameObject.transform.position = new Vector3(UnityEngine.Random.Range(s.rect.xMin, s.rect.xMax), UnityEngine.Random.Range(s.rect.yMin, s.rect.yMax), 0) + s.transform.position;
+        }
 
         public override void OnStartServer() 
         {
@@ -261,12 +275,32 @@ namespace Mirror.JlanSus
 
             TaskAbort += OnTaskAbort;
             TaskComplete += OnTaskComplete;
+
+            MeetingComplete += OnMeetingComplete;
+
+            gameManager = GameObject.Find("GameManager");
         }
 
         public void OnTriggerEnter2D( Collider2D col )
         {
             Debug.Log("onTriggerEnter:" + col.gameObject.GetComponent<SuperObject>().m_Type);
             var type = col.gameObject.GetComponent<SuperObject>().m_Type;
+
+            if (type.StartsWith("MeetingCall")) 
+            {
+                standingOnMeetingCall = true;
+
+                if (isLocalPlayer) 
+                {
+
+                    if (isLanittaja && standingOnMeetingCall) 
+                    {
+                        var text = GetChildWithName(gameObject, "LanittajaPress1");
+                        text.GetComponent<TextMeshPro>().SetText("Press <color=\"red\">1</color> to call meeting");
+                        text.SetActive(true);
+                    }
+                }
+            }
 
             if (type.StartsWith("Task")) {
                 var num = Int32.Parse(type.Substring("Task".Length));
@@ -277,6 +311,7 @@ namespace Mirror.JlanSus
                     if (isLanittaja && assignedTasks.Contains(standingOnTaskNum) && !completedTasks.Contains(standingOnTaskNum)) 
                     {
                         var text = GetChildWithName(gameObject, "LanittajaPress1");
+                        text.GetComponent<TextMeshPro>().SetText("Press <color=\"red\">1</color> to do task");
                         text.SetActive(true);
                     }
                 }
@@ -298,6 +333,19 @@ namespace Mirror.JlanSus
         public void OnTriggerExit2D( Collider2D col )
         {
             var type = col.gameObject.GetComponent<SuperObject>().m_Type;
+
+            if (type.Contains("MeetingCall")) 
+            {
+                standingOnMeetingCall = false;
+
+                if (isLanittaja && isLocalPlayer) 
+                {
+                    var text = GetChildWithName(gameObject, "LanittajaPress1");
+                    text.SetActive(false);
+                } 
+
+            }
+
             if (type.StartsWith("Task")) {
                 var prevTask = standingOnTaskNum;
                 standingOnTaskNum = -1;
@@ -441,6 +489,16 @@ namespace Mirror.JlanSus
             CloseTask();
         }
 
+        void OnMeetingComplete(bool result) 
+        {
+            Respawn();
+
+            var text = GetChildWithName(gameObject, "LanittajaPress1");
+            text.SetActive(false);
+
+            gameManager.GetComponent<GameTimer>().CmdChangeState(GameState.Freeroam);
+        }
+
         // additively load other scenes for the task minigames
         void LoadTask() 
         {
@@ -453,6 +511,18 @@ namespace Mirror.JlanSus
         void CloseTask() {
             var num = standingOnTaskNum;
             StartCoroutine(UnloadScene("TaskScene"+num));
+        }
+
+        // Additively load the meeting scene for voting
+        void LoadMeeting() 
+        {
+            SceneManager.LoadScene("MeetingScene", LoadSceneMode.Additive);
+            Debug.Log("MeetingScene was loaded.");
+        }
+
+        void CloseMeeting() {
+            StartCoroutine(UnloadScene("MeetingScene"));
+            meetingLoaded = false;
         }
 
         IEnumerator UnloadScene(string oldSceneName)
@@ -478,9 +548,10 @@ namespace Mirror.JlanSus
             // only let the local player control the player.
             if (isLocalPlayer) 
             {
-                
-                // INPUT & PHYSICS
-                if (!doingTask) 
+                var state = gameManager.GetComponent<GameTimer>().CurrentState;
+       
+                // INPUT & PHYSICS in freeroam mode
+                if (!doingTask && state == GameState.Freeroam)  
                 {
                     float h = Input.GetAxisRaw("Horizontal");
                     float v = Input.GetAxisRaw("Vertical");
@@ -506,12 +577,33 @@ namespace Mirror.JlanSus
                         doingTask = true;
                         LoadTask();
                     }
+
+                    // check for meeting call
+                    if (Input.GetKey("1") && standingOnMeetingCall)
+                    {
+                        // call 90 second meeting
+                        gameManager.GetComponent<GameTimer>().CmdChangeState(GameState.Meeting);
+                        meetingLoaded = false;
+                    }
                 } 
+
+                if (state == GameState.Meeting && !meetingLoaded) 
+                {
+                    meetingLoaded = true;
+                    LoadMeeting();
+                }
+
+                if (state == GameState.Freeroam && meetingLoaded) 
+                {
+                    meetingLoaded = false;
+                    CloseMeeting();
+                }
 
                 // debug
                 var sign = GetChildWithName(gameObject, "NameSign");
-                sign.GetComponent<TextMeshPro>().SetText(nick + (doingTask ? " / working:" + standingOnTaskNum : (standingOnTaskNum >= 0) ? " / onTask:" + standingOnTaskNum : ""));
+//                sign.GetComponent<TextMeshPro>().SetText(nick + (doingTask ? " / working:" + standingOnTaskNum : (standingOnTaskNum >= 0) ? " / onTask:" + standingOnTaskNum : standingOnMeetingCall ? " / call meeting" : ""));
 
+                sign.GetComponent<TextMeshPro>().SetText(nick);
 
             }
         }

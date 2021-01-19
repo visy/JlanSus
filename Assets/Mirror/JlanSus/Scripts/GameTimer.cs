@@ -5,6 +5,16 @@ using System.Collections.Generic;
 
 namespace Mirror.JlanSus
 {
+    public enum GameState 
+    {
+        Lobby,
+        Intro,
+        Freeroam,
+        Meeting,
+        Cutscene,
+        End,
+    };
+
     public class GameTimer : NetworkBehaviour 
     {
         [SyncVar] 
@@ -19,6 +29,19 @@ namespace Mirror.JlanSus
         [SyncVar] 
         public bool masterTimer = false; // Is this the master timer?
 
+        [SyncVar]
+        public GameState _currentState;
+
+        public GameState CurrentState 
+        {
+            get { return _currentState; }
+            set 
+            {
+                if (_currentState == value) return;
+                _currentState = value;
+            }
+        }
+
         GameTimer serverTimer;
 
         void Start() 
@@ -30,6 +53,7 @@ namespace Mirror.JlanSus
                     serverTimer = this;
                     masterTimer = true;
                 }
+                CurrentState = GameState.Freeroam;
             } 
             else if (isLocalPlayer) // For all the boring old clients to do: get the host's timer.
             { 
@@ -42,6 +66,21 @@ namespace Mirror.JlanSus
                     }
                 }
             }
+        }
+
+        [Command(ignoreAuthority = true)]
+        public void CmdChangeState(GameState newState) 
+        {
+            RpcStateChange(newState);
+        }
+
+        [ClientRpc]
+        void RpcStateChange(GameState newState) 
+        {
+            _currentState = newState;
+            timer = -1;
+
+            Debug.Log("Changing state to: " + newState);
         }
         
         void Update()
