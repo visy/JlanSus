@@ -183,6 +183,8 @@ namespace Mirror.JlanSus
 
         private bool meetingLoaded = false;
 
+        private Vector3 originalSpawnPos;
+
         [HideInInspector][NonSerialized]
         public new Transform transform;
         [HideInInspector][NonSerialized]
@@ -232,7 +234,7 @@ namespace Mirror.JlanSus
             if (isLocalPlayer) 
             {
                 var cam = GameObject.Find("Main Camera");
-
+                originalSpawnPos = gameObject.transform.position;
                 cam.transform.parent = gameObject.transform;
 
                 var pos = gameObject.transform.position;
@@ -542,6 +544,8 @@ namespace Mirror.JlanSus
                 var text2 = GetChildWithName(resultGo, "Text");
                 text2.GetComponent<TextMeshProUGUI>().SetText(result);
                 
+                gameObject.transform.position = originalSpawnPos;
+                move(Vector3.zero);
             }
 
             gameManager.GetComponent<GameManager>().CmdChangeState(GameState.Freeroam);

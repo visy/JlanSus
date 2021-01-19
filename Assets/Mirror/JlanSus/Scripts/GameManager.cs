@@ -112,16 +112,29 @@ namespace Mirror.JlanSus
 
                 if (largest > 0 && largestIndex > 0 && (float)largest > (float)(playerCount/2.0f)) 
                 {
-                    text = "EVICTED player #" + largestIndex + " with " + largest + " votes.";
+                    text = "EVICTED Player #" + largestIndex + " with " + largest + " votes.";
                 } 
                 else 
                 {
                     text = "Nobody was evicted.";
                 }
 
-                Mirror.JlanSus.JlanPlayer.MeetingComplete?.Invoke(text);
+                CmdMeetingComplete(text);
             }
         }
+
+        [Command(ignoreAuthority = true)]
+        public void CmdMeetingComplete(string text) 
+        {
+            RpcMeetingComplete(text);
+        }
+
+        [ClientRpc]
+        void RpcMeetingComplete(string text) 
+        {
+            Mirror.JlanSus.JlanPlayer.MeetingComplete?.Invoke(text);
+        }
+
 
         [Command(ignoreAuthority = true)]
         public void CmdChangeState(GameState newState) 
