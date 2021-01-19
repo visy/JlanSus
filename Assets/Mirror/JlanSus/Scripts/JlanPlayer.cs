@@ -1,6 +1,8 @@
 #define DEBUG_CC2D_RAYS
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using SuperTiled2Unity;
@@ -195,6 +197,15 @@ namespace Mirror.JlanSus
             Color.yellow
         };
 
+        public static Action<bool> TaskAbort;
+        public static Action<bool> TaskComplete;
+
+        private List<int> assignedTasks = new List<int>() {
+            1,2,3
+        };
+
+        private List<int> completedTasks = new List<int>();
+
         public override void OnStartServer() 
         {
             base.OnStartServer();
@@ -214,8 +225,6 @@ namespace Mirror.JlanSus
                 var pos = gameObject.transform.position;
                 pos.z = -10;
                 cam.transform.position = pos;
-
-//                cam.transform.position = Vector3.zero;
 
                 nick = PlayerPrefs.GetString("nick", "Defaultti");
                 SetNick();
@@ -249,6 +258,9 @@ namespace Mirror.JlanSus
             }
 
             GetComponent<SpriteRenderer>().color = colorIndex[(netId % 10)];
+
+            TaskAbort += OnTaskAbort;
+            TaskComplete += OnTaskComplete;
         }
 
         public void OnTriggerEnter2D( Collider2D col )
@@ -262,7 +274,7 @@ namespace Mirror.JlanSus
 
                 if (isLocalPlayer) 
                 {
-                    if (isLanittaja) 
+                    if (isLanittaja && assignedTasks.Contains(standingOnTaskNum) && !completedTasks.Contains(standingOnTaskNum)) 
                     {
                         var text = GetChildWithName(gameObject, "LanittajaPress1");
                         text.SetActive(true);
@@ -286,15 +298,13 @@ namespace Mirror.JlanSus
         public void OnTriggerExit2D( Collider2D col )
         {
             var type = col.gameObject.GetComponent<SuperObject>().m_Type;
-
             if (type.StartsWith("Task")) {
+                var prevTask = standingOnTaskNum;
                 standingOnTaskNum = -1;
-
-                doingTask = false;
 
                 if (isLocalPlayer) 
                 {
-                    if (isLanittaja) 
+                    if (isLanittaja && assignedTasks.Contains(prevTask) && !completedTasks.Contains(prevTask)) 
                     {
                         var text = GetChildWithName(gameObject, "LanittajaPress1");
                         text.SetActive(false);
@@ -415,6 +425,53 @@ namespace Mirror.JlanSus
             // role setup
         }
 
+        void OnTaskAbort(bool result) 
+        {
+            CloseTask();
+        }
+
+        void OnTaskComplete(bool result) 
+        {
+            // update hud / sim whatever
+            completedTasks.Add(standingOnTaskNum);
+
+            var text = GetChildWithName(gameObject, "LanittajaPress1");
+            text.SetActive(false);
+
+            CloseTask();
+        }
+
+        // additively load other scenes for the task minigames
+        void LoadTask() 
+        {
+            var num = standingOnTaskNum;
+            var name = "TaskScene"+num;
+            SceneManager.LoadScene(name, LoadSceneMode.Additive);
+            Debug.Log(name + " was loaded.");
+        }
+
+        void CloseTask() {
+            var num = standingOnTaskNum;
+            StartCoroutine(UnloadScene("TaskScene"+num));
+        }
+
+        IEnumerator UnloadScene(string oldSceneName)
+        {
+            AsyncOperation asyncUnload = SceneManager.UnloadSceneAsync(oldSceneName);
+
+            while (!asyncUnload.isDone)
+            {
+                yield return null;
+            }
+
+            if (asyncUnload.isDone)
+            {
+                Debug.Log(oldSceneName + " was unloaded.");
+
+                doingTask = false;
+            }
+        }
+
         // need to use FixedUpdate for rigidbody
         void FixedUpdate()
         {
@@ -443,18 +500,13 @@ namespace Mirror.JlanSus
                     rigidbody2d.freezeRotation = true;
                     gameObject.transform.rotation = Quaternion.identity;
 
-                    if (Input.GetKey("1"))
+                    // check if pressing one, were are standing on valid task that has not yet been completed
+                    if (Input.GetKey("1") && standingOnTaskNum >= 0 && assignedTasks.Contains(standingOnTaskNum) && !completedTasks.Contains(standingOnTaskNum))
                     {
                         doingTask = true;
+                        LoadTask();
                     }
-                } else 
-                {
-                    if (Input.GetKey("1"))
-                    {
-                        doingTask = false;
-                    }
-
-                }
+                } 
 
                 // debug
                 var sign = GetChildWithName(gameObject, "NameSign");
@@ -463,6 +515,7 @@ namespace Mirror.JlanSus
 
             }
         }
+
 
        	#region Public
 
