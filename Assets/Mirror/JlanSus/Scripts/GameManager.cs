@@ -44,6 +44,8 @@ namespace Mirror.JlanSus
 
         GameManager serverTimer;
 
+        public GameObject MeetingResult;
+
         void Start() 
         {
             if (isServer) // For the host to do: use the timer and control the time.
@@ -106,15 +108,18 @@ namespace Mirror.JlanSus
                     }
                 }
 
+                var text = "";
+
                 if (largest > 0 && largestIndex > 0 && (float)largest > (float)(playerCount/2.0f)) 
                 {
-                    Debug.Log("EVICTED *** " + largestIndex + " with " + largest + " votes.");
+                    text = "EVICTED player #" + largestIndex + " with " + largest + " votes.";
                 } 
-                else {
-                    Debug.Log("Nobody was evicted.");
+                else 
+                {
+                    text = "Nobody was evicted.";
                 }
 
-                Mirror.JlanSus.JlanPlayer.MeetingComplete?.Invoke(true);
+                Mirror.JlanSus.JlanPlayer.MeetingComplete?.Invoke(text);
             }
         }
 

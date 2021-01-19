@@ -207,7 +207,7 @@ namespace Mirror.JlanSus
         public static Action<bool> TaskAbort;
         public static Action<bool> TaskComplete;
 
-        public static Action<bool> MeetingComplete;
+        public static Action<string> MeetingComplete;
 
         public static Action<int> CastVote;
 
@@ -218,14 +218,6 @@ namespace Mirror.JlanSus
         private List<int> completedTasks = new List<int>();
 
         private GameObject gameManager;
-
-        public void Respawn() 
-        {
-            var s = GameObject.Find("NetworkManager").GetComponent<JlanNetworkManager>().playerSpawn;
-            gameObject.transform.position = new Vector3(UnityEngine.Random.Range(s.rect.xMin, s.rect.xMax), UnityEngine.Random.Range(s.rect.yMin, s.rect.yMax), 0) + s.transform.position;
-
-            currentVote = -1;
-        }
 
         public override void OnStartServer() 
         {
@@ -519,12 +511,38 @@ namespace Mirror.JlanSus
             CloseTask();
         }
 
-        void OnMeetingComplete(bool result) 
+        public static UnityEngine.Object Find(string name, System.Type type)
         {
-            Respawn();
+            UnityEngine.Object [] objs = Resources.FindObjectsOfTypeAll(type);
+    
+            foreach (UnityEngine.Object obj in objs)
+            {
+                if (obj.name == name)
+                {
+                    return obj;
+                }
+            }
+    
+            return null;
+        }
 
-            var text = GetChildWithName(gameObject, "LanittajaPress1");
-            text.SetActive(false);
+        void OnMeetingComplete(string result) 
+        {
+            currentVote = -1;
+
+            if (isLocalPlayer) 
+            {
+                var text = GetChildWithName(gameObject, "LanittajaPress1");
+                text.SetActive(false);
+
+                var resultGo = gameManager.GetComponent<GameManager>().MeetingResult;
+                Debug.Log(resultGo);
+                resultGo.SetActive(true);
+
+                var text2 = GetChildWithName(resultGo, "Text");
+                text2.GetComponent<TextMeshProUGUI>().SetText(result);
+                
+            }
 
             gameManager.GetComponent<GameManager>().CmdChangeState(GameState.Freeroam);
         }
