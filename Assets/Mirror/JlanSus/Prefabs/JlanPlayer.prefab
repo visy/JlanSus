@@ -219,11 +219,14 @@ MonoBehaviour:
   totalVerticalRays: 4
   nick: 
   isLanittaja: 0
+  currentVote: -1
+  isAlive: 1
   hatName: none
   standingOnTaskNum: -1
   doingTask: 0
   standingOnMeetingCall: 0
   speed: 8
+  bodyPrefab: {fileID: 1240244544407914, guid: b5ca06b34c76deb4fa5a83d8a09e3e99, type: 3}
 --- !u!114 &114398896143473162
 MonoBehaviour:
   m_ObjectHideFlags: 0

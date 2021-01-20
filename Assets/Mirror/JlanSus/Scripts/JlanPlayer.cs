@@ -224,7 +224,9 @@ namespace Mirror.JlanSus
 
         private List<int> completedTasks = new List<int>();
 
-        private GameObject gameManager;
+        private GameManager gameManager;
+
+        public GameObject bodyPrefab;
 
         public override void OnStartServer() 
         {
@@ -233,7 +235,7 @@ namespace Mirror.JlanSus
 
         public override void OnStartClient() 
         {
-            gameManager = GameObject.Find("GameManager");
+            gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
 
             Physics2D.IgnoreLayerCollision(9, 9);
             gameObject.layer = 9;
@@ -481,6 +483,21 @@ namespace Mirror.JlanSus
             // role setup
         }
 
+        [Command]
+        void CmdDropBody(int playerId)
+        {
+            Vector3 pos = gameObject.transform.position;
+            Quaternion rot = gameObject.transform.rotation;
+
+            rot *= Quaternion.Euler(0.0f,0.0f,90.0f);
+
+            GameObject body = Instantiate(bodyPrefab, pos, rot);
+
+            body.GetComponent<SpriteRenderer>().color = colorIndex[(playerId % 10)];
+
+            NetworkServer.Spawn(body);
+        }
+
         void OnCastVote(int vote) 
         {
             CmdCastVote(vote);
@@ -495,9 +512,9 @@ namespace Mirror.JlanSus
         [Command]
         void CmdChangeState(GameState newState) 
         {
-            if (newState != gameManager.GetComponent<GameManager>().CurrentState)
+            if (newState != gameManager.CurrentState)
             {
-                gameManager.GetComponent<GameManager>().RpcStateChange(newState);
+                gameManager.RpcStateChange(newState);
             }
         }
 
@@ -519,13 +536,15 @@ namespace Mirror.JlanSus
                 c.a = 0.0f;
                 GetComponent<SpriteRenderer>().color = c;
             }
+
+            CmdDropBody(playerId);
         }
 
         [ClientRpc]
         void RpcCastVote(int vote)
         {
             currentVote = vote;
-            gameManager.GetComponent<GameManager>().CheckVotes();
+            gameManager.CheckVotes();
         }
 
         void OnTaskAbort(bool result) 
@@ -568,7 +587,7 @@ namespace Mirror.JlanSus
                 var text = GetChildWithName(gameObject, "LanittajaPress1");
                 text.SetActive(false);
 
-                var resultGo = gameManager.GetComponent<GameManager>().MeetingResult;
+                var resultGo = gameManager.MeetingResult;
                 resultGo.SetActive(true);
 
                 var text2 = GetChildWithName(resultGo, "Text");
@@ -631,7 +650,7 @@ namespace Mirror.JlanSus
             // only let the local player control the player.
             if (isLocalPlayer) 
             {
-                var state = gameManager.GetComponent<GameManager>().CurrentState;
+                var state = gameManager.CurrentState;
        
                 // INPUT & PHYSICS in freeroam mode
                 if (!doingTask && (state == GameState.Freeroam || state == GameState.Lobby))  
