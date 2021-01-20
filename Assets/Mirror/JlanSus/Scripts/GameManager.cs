@@ -55,7 +55,7 @@ namespace Mirror.JlanSus
                     serverTimer = this;
                     masterTimer = true;
                 }
-                CurrentState = GameState.Freeroam;
+                CurrentState = GameState.Lobby;
             } 
             else if (isLocalPlayer) // For all the boring old clients to do: get the host's timer.
             { 
@@ -73,7 +73,7 @@ namespace Mirror.JlanSus
         public void CheckVotes() 
         {
             if (!isServer) return;
-            
+
             var votes = new Dictionary<int,int>();
             for(var i = 0;i < 16;i++) 
             {
@@ -154,6 +154,13 @@ namespace Mirror.JlanSus
 
             if(masterTimer) // Only the MASTER timer controls the time
             { 
+
+                if (NetworkServer.connections.Count >= minPlayers && _currentState == GameState.Lobby) 
+                {
+                    timer = 0;
+                    RpcStateChange(GameState.Freeroam);
+                }
+
                 if (timer>=gameTime)
                 {
                     timer = -2;
@@ -171,7 +178,10 @@ namespace Mirror.JlanSus
                 }   
                 else
                 {
-                    timer += Time.deltaTime;
+                    if (_currentState == GameState.Freeroam)
+                    {
+                        timer += Time.deltaTime;
+                    }
                 }
             }
 

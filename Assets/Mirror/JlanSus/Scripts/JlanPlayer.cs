@@ -233,6 +233,8 @@ namespace Mirror.JlanSus
 
         public override void OnStartClient() 
         {
+            gameManager = GameObject.Find("GameManager");
+
             Physics2D.IgnoreLayerCollision(9, 9);
             gameObject.layer = 9;
 
@@ -285,7 +287,6 @@ namespace Mirror.JlanSus
             MeetingComplete += OnMeetingComplete;
             CastVote += OnCastVote;
 
-            gameManager = GameObject.Find("GameManager");
         }
 
         public void OnTriggerEnter2D( Collider2D col )
@@ -633,7 +634,7 @@ namespace Mirror.JlanSus
                 var state = gameManager.GetComponent<GameManager>().CurrentState;
        
                 // INPUT & PHYSICS in freeroam mode
-                if (!doingTask && state == GameState.Freeroam)  
+                if (!doingTask && (state == GameState.Freeroam || state == GameState.Lobby))  
                 {
                     float h = Input.GetAxisRaw("Horizontal");
                     float v = Input.GetAxisRaw("Vertical");
@@ -654,28 +655,28 @@ namespace Mirror.JlanSus
                     gameObject.transform.rotation = Quaternion.identity;
 
                     // check if pressing one, were are standing on valid task that has not yet been completed
-                    if (Input.GetKey("1") && standingOnTaskNum >= 0 && assignedTasks.Contains(standingOnTaskNum) && !completedTasks.Contains(standingOnTaskNum))
+                    if (Input.GetKey("1") && standingOnTaskNum >= 0 && assignedTasks.Contains(standingOnTaskNum) && !completedTasks.Contains(standingOnTaskNum) && state == GameState.Freeroam)
                     {
                         doingTask = true;
                         LoadTask();
                     }
 
-                    if (isAlive) 
-                    {
-                        // check for meeting call
-                        if (Input.GetKey("1") && standingOnMeetingCall && !meetingCalled)
+                    if (state == GameState.Freeroam) {
+                        if (isAlive) 
                         {
-                            // call meeting
-                            meetingCalled = true;
-                            CmdChangeState(GameState.Meeting);
-                            meetingLoaded = false;
+                            // check for meeting call
+                            if (Input.GetKey("1") && standingOnMeetingCall && !meetingCalled)
+                            {
+                                // call meeting
+                                meetingCalled = true;
+                                CmdChangeState(GameState.Meeting);
+                                meetingLoaded = false;
+                            }
+                        } 
+                        else 
+                        {
                         }
-                    } 
-                    else 
-                    {
                     }
-
-                    
                 } 
 
                 if (state == GameState.Meeting && !meetingLoaded) 
