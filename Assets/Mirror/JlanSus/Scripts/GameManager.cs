@@ -119,7 +119,7 @@ namespace Mirror.JlanSus
                         if (player.GetComponent<JlanPlayer>().netId == largestIndex) 
                         {
                             text = "Evicted " + player.GetComponent<JlanPlayer>().nick + " with " + largest + " votes.";
-                            player.GetComponent<JlanPlayer>().RpcKillPlayer(largestIndex);
+                            player.GetComponent<JlanPlayer>().RpcKillPlayer(largestIndex, false);
                             break;
                         }
                     }

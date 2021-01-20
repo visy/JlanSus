@@ -247,12 +247,6 @@ namespace Mirror.JlanSus
             if (netId == 2) 
             {
                 isLanittaja = false;
-                if (isLocalPlayer) 
-                {
-                    var text = GetChildWithName(gameObject, "ImpoPress1");
-                    text.GetComponent<TextMeshPro>().SetText("Press <color=\"red\">1</color> to eat");
-                    text.SetActive(true);
-                }
             } 
             else 
             {
@@ -321,10 +315,9 @@ namespace Mirror.JlanSus
 
                 if (isLocalPlayer) 
                 {
-
-                    if (isLanittaja && standingOnMeetingCall) 
+                    if (standingOnMeetingCall) 
                     {
-                        var text = GetChildWithName(gameObject, "LanittajaPress1");
+                        var text = GetChildWithName(gameObject, "TextPress1");
                         text.GetComponent<TextMeshPro>().SetText("Press <color=\"red\">1</color> to call meeting");
                         text.SetActive(true);
                     }
@@ -339,7 +332,7 @@ namespace Mirror.JlanSus
                 {
                     if (isLanittaja && assignedTasks.Contains(standingOnTaskNum) && !completedTasks.Contains(standingOnTaskNum)) 
                     {
-                        var text = GetChildWithName(gameObject, "LanittajaPress1");
+                        var text = GetChildWithName(gameObject, "TextPress1");
                         text.GetComponent<TextMeshPro>().SetText("Press <color=\"red\">1</color> to do task");
                         text.SetActive(true);
                     }
@@ -367,12 +360,11 @@ namespace Mirror.JlanSus
             {
                 standingOnMeetingCall = false;
 
-                if (isLanittaja && isLocalPlayer) 
+                if (isLocalPlayer) 
                 {
-                    var text = GetChildWithName(gameObject, "LanittajaPress1");
+                    var text = GetChildWithName(gameObject, "TextPress1");
                     text.SetActive(false);
                 } 
-
             }
 
             if (type.StartsWith("Task")) {
@@ -383,7 +375,7 @@ namespace Mirror.JlanSus
                 {
                     if (isLanittaja && assignedTasks.Contains(prevTask) && !completedTasks.Contains(prevTask)) 
                     {
-                        var text = GetChildWithName(gameObject, "LanittajaPress1");
+                        var text = GetChildWithName(gameObject, "TextPress1");
                         text.SetActive(false);
                     }
                 }
@@ -544,11 +536,14 @@ namespace Mirror.JlanSus
         }
 
         [ClientRpc]
-        public void RpcKillPlayer(int playerId)
+        public void RpcKillPlayer(int playerId, bool leaveBody)
         {
             isAlive = false;
+
+            // move inside walls while dead
             platformMask = 0;
 
+            // either invisible or partially visible for local player & other ghosts
             if (isLocalPlayer) 
             {
                 var c = GetComponent<SpriteRenderer>().color;
@@ -562,7 +557,10 @@ namespace Mirror.JlanSus
                 GetComponent<SpriteRenderer>().color = c;
             }
 
-            CmdDropBody(playerId);
+            if (leaveBody)
+            {
+                CmdDropBody(playerId);
+            }
         }
 
         [ClientRpc]
@@ -582,7 +580,7 @@ namespace Mirror.JlanSus
             // update hud / sim whatever
             completedTasks.Add(standingOnTaskNum);
 
-            var text = GetChildWithName(gameObject, "LanittajaPress1");
+            var text = GetChildWithName(gameObject, "TextPress1");
             text.SetActive(false);
 
             CloseTask();
@@ -609,7 +607,7 @@ namespace Mirror.JlanSus
 
             if (isLocalPlayer) 
             {
-                var text = GetChildWithName(gameObject, "LanittajaPress1");
+                var text = GetChildWithName(gameObject, "TextPress1");
                 text.SetActive(false);
 
                 var resultGo = gameManager.MeetingResult;
@@ -707,6 +705,12 @@ namespace Mirror.JlanSus
                         LoadTask();
                     }
 
+                    if (!isLanittaja && state == GameState.Freeroam && !standingOnMeetingCall) 
+                    {
+                        // KILL AS IMPOSTOR
+                        CheckPlayersCloseAndKill();
+                    }
+
                     if (state == GameState.Freeroam) 
                     {
                         // CALL MEETING
@@ -719,16 +723,7 @@ namespace Mirror.JlanSus
                         }
                     }
 
-                    if (!isLanittaja && state == GameState.Freeroam) 
-                    {
-                        // KILL AS IMPOSTOR
-                        if (Input.GetKey("1") && !killingStarted) 
-                        {
-                            killingStarted = true;
-                            CheckPlayersCloseAndKill();
-                            killingStarted = false;
-                        }
-                    }
+
                 } 
 
                 if (state == GameState.Meeting && !meetingLoaded) 
@@ -770,15 +765,36 @@ namespace Mirror.JlanSus
         {
             var players = GameObject.FindGameObjectsWithTag("Player");
 
+            var oneClose = false;
+
+            var pressingKey = Input.GetKey("1");
+
             foreach (var player in players) 
             {
                 JlanPlayer other = player.GetComponent<JlanPlayer>();
-                float dist = Vector3.Distance(other.gameObject.transform.position, gameObject.transform.position);
-                if (dist >= minKillDistance && other.netId != netId && other.isLanittaja && other.isAlive)
+                if (other != null) 
                 {
-                    other.RpcKillPlayer((int)other.netId);
-                    return;
+                    float dist = Vector3.Distance(other.gameObject.transform.position, gameObject.transform.position);
+                    if (dist <= minKillDistance && !oneClose && other.netId != netId && other.isLanittaja && other.isAlive) 
+                    {
+                        oneClose = true;
+                        var text = GetChildWithName(gameObject, "TextPress1");
+                        text.GetComponent<TextMeshPro>().SetText("Press <color=\"red\">1</color> to eat");
+                        text.SetActive(true);
+                    }
+
+                    if (oneClose && pressingKey)
+                    {
+                        other.RpcKillPlayer((int)other.netId, true);
+                        break;
+                    }
                 }
+            }
+
+            if (!oneClose)
+            {
+                var text = GetChildWithName(gameObject, "TextPress1");
+                text.GetComponent<TextMeshPro>().SetText("");
             }
         }
 
