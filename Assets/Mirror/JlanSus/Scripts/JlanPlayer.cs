@@ -172,6 +172,9 @@ namespace Mirror.JlanSus
         [SyncVar]
         public int currentVote = -1;
 
+        [SyncVar]
+        public bool isAlive = true;
+
         public string hatName;
 
         public int standingOnTaskNum = -1;
@@ -212,6 +215,7 @@ namespace Mirror.JlanSus
         public static Action<string> MeetingComplete;
 
         public static Action<int> CastVote;
+        public static Action<int> KillPlayer;
 
         private List<int> assignedTasks = new List<int>() {
             1,2,3
@@ -279,6 +283,7 @@ namespace Mirror.JlanSus
 
             MeetingComplete += OnMeetingComplete;
             CastVote += OnCastVote;
+            KillPlayer += OnKillPlayer;
 
             gameManager = GameObject.Find("GameManager");
         }
@@ -475,6 +480,27 @@ namespace Mirror.JlanSus
             // role setup
         }
 
+        void OnKillPlayer(int playerId) 
+        {
+            if (playerId == netId) 
+            {
+                CmdKillPlayer();
+            }
+        }
+
+        [Command]
+        void CmdKillPlayer() 
+        {
+            RpcKillPlayer();
+        }
+
+        [ClientRpc]
+        void RpcKillPlayer()
+        {
+            isAlive = false;
+            platformMask = 0;
+        }
+
         void OnCastVote(int vote) 
         {
             CmdCastVote(vote);
@@ -630,13 +656,17 @@ namespace Mirror.JlanSus
                         LoadTask();
                     }
 
-                    // check for meeting call
-                    if (Input.GetKey("1") && standingOnMeetingCall)
+                    if (isAlive) 
                     {
-                        // call meeting
-                        gameManager.GetComponent<GameManager>().CmdChangeState(GameState.Meeting);
-                        meetingLoaded = false;
+                        // check for meeting call
+                        if (Input.GetKey("1") && standingOnMeetingCall)
+                        {
+                            // call meeting
+                            gameManager.GetComponent<GameManager>().CmdChangeState(GameState.Meeting);
+                            meetingLoaded = false;
+                        }
                     }
+                    
                 } 
 
                 if (state == GameState.Meeting && !meetingLoaded) 
@@ -655,7 +685,7 @@ namespace Mirror.JlanSus
                 var sign = GetChildWithName(gameObject, "NameSign");
 //                sign.GetComponent<TextMeshPro>().SetText(nick + (doingTask ? " / working:" + standingOnTaskNum : (standingOnTaskNum >= 0) ? " / onTask:" + standingOnTaskNum : standingOnMeetingCall ? " / call meeting" : ""));
 
-                sign.GetComponent<TextMeshPro>().SetText(nick);
+                sign.GetComponent<TextMeshPro>().SetText(nick + (!isAlive ? " (dead)" : ""));
 
             }
         }

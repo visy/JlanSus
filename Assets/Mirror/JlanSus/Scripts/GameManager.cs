@@ -112,7 +112,15 @@ namespace Mirror.JlanSus
 
                 if (largest > 0 && largestIndex > 0 && (float)largest > (float)(playerCount/2.0f)) 
                 {
-                    text = "EVICTED Player #" + largestIndex + " with " + largest + " votes.";
+                    foreach(var player in players) 
+                    {
+                        if (player.GetComponent<JlanPlayer>().netId == largestIndex) 
+                        {
+                            text = "Evicted " + player.GetComponent<JlanPlayer>().nick + " with " + largest + " votes.";
+                            Mirror.JlanSus.JlanPlayer.KillPlayer?.Invoke(largestIndex);
+                            break;
+                        }
+                    }
                 } 
                 else 
                 {

@@ -41,7 +41,15 @@ namespace Mirror
             if (!showGUI)
                 return;
 
-            GUILayout.BeginArea(new Rect(10 + offsetX, 40 + offsetY, 215, 9999));
+            float sw = 1280.0f;
+            float sh = 720.0f;
+
+            float resX = (float) (Screen.width) / sw;
+            float resY = (float) (Screen.height) / sh;
+            //Set matrix
+            GUI.matrix = Matrix4x4.TRS(new Vector3(0, 0, 0), Quaternion.identity, new Vector3(resX, resY, 1));
+
+            GUILayout.BeginArea(new Rect(10 + offsetX, 40 + offsetY, 485, 9999));
             if (!NetworkClient.isConnected && !NetworkServer.active)
             {
                 StartButtons();
