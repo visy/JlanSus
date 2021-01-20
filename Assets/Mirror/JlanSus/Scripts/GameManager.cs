@@ -70,7 +70,7 @@ namespace Mirror.JlanSus
             }
         }
 
-        void CheckVotes() 
+        public void CheckVotes() 
         {
             var votes = new Dictionary<int,int>();
             for(var i = 0;i < 16;i++) 
@@ -117,7 +117,7 @@ namespace Mirror.JlanSus
                         if (player.GetComponent<JlanPlayer>().netId == largestIndex) 
                         {
                             text = "Evicted " + player.GetComponent<JlanPlayer>().nick + " with " + largest + " votes.";
-                            Mirror.JlanSus.JlanPlayer.KillPlayer?.Invoke(largestIndex);
+                            player.GetComponent<JlanPlayer>().RpcKillPlayer(largestIndex);
                             break;
                         }
                     }
@@ -127,14 +127,8 @@ namespace Mirror.JlanSus
                     text = "Nobody was evicted.";
                 }
 
-                CmdMeetingComplete(text);
+                RpcMeetingComplete(text);
             }
-        }
-
-        [Command(ignoreAuthority = true)]
-        public void CmdMeetingComplete(string text) 
-        {
-            RpcMeetingComplete(text);
         }
 
         [ClientRpc]
@@ -143,29 +137,14 @@ namespace Mirror.JlanSus
             Mirror.JlanSus.JlanPlayer.MeetingComplete?.Invoke(text);
         }
 
-
-        [Command(ignoreAuthority = true)]
-        public void CmdChangeState(GameState newState) 
-        {
-            RpcStateChange(newState);
-        }
-
         [ClientRpc]
-        void RpcStateChange(GameState newState) 
+        public void RpcStateChange(GameState newState) 
         {
             if (!isServer) return;
             _currentState = newState;
             timer = -1;
 
             Debug.Log("Changing state to: " + newState);
-
-        }
-
-        [Command(ignoreAuthority = true)]
-        public void CmdUpdateVotes() 
-        {
-            if (!isServer) return;
-            CheckVotes();
         }
 
         void Update()

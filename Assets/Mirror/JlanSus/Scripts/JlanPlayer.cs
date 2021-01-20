@@ -185,6 +185,7 @@ namespace Mirror.JlanSus
         public float speed = 30;
 
         private bool meetingLoaded = false;
+        private bool meetingCalled = false;
 
         private Vector3 originalSpawnPos;
 
@@ -283,7 +284,6 @@ namespace Mirror.JlanSus
 
             MeetingComplete += OnMeetingComplete;
             CastVote += OnCastVote;
-            KillPlayer += OnKillPlayer;
 
             gameManager = GameObject.Find("GameManager");
         }
@@ -480,22 +480,35 @@ namespace Mirror.JlanSus
             // role setup
         }
 
-        void OnKillPlayer(int playerId) 
+        void OnCastVote(int vote) 
         {
-            if (playerId == netId) 
-            {
-                CmdKillPlayer();
-            }
+            CmdCastVote(vote);
+        }
+
+        [Command]
+        void CmdCastVote(int vote) 
+        {
+            RpcCastVote(vote);
         }
 
         [Command(ignoreAuthority = true)]
-        void CmdKillPlayer() 
+        public void CmdUpdateVotes() 
         {
-            RpcKillPlayer();
+            if (!isServer) return;
+            gameManager.GetComponent<GameManager>().CheckVotes();
+        }
+
+        [Command]
+        void CmdChangeState(GameState newState) 
+        {
+            if (newState != gameManager.GetComponent<GameManager>().CurrentState)
+            {
+                gameManager.GetComponent<GameManager>().RpcStateChange(newState);
+            }
         }
 
         [ClientRpc]
-        void RpcKillPlayer()
+        public void RpcKillPlayer(int playerId)
         {
             isAlive = false;
             platformMask = 0;
@@ -514,26 +527,11 @@ namespace Mirror.JlanSus
             }
         }
 
-        void OnCastVote(int vote) 
-        {
-            CmdCastVote(vote);
-        }
-
-        [Command]
-        void CmdCastVote(int vote) 
-        {
-            RpcCastVote(vote);
-        }
-
         [ClientRpc]
         void RpcCastVote(int vote)
         {
             currentVote = vote;
-
-            if (isServer) 
-            {
-                gameManager.GetComponent<GameManager>().CmdUpdateVotes();
-            }
+            CmdUpdateVotes();
         }
 
         void OnTaskAbort(bool result) 
@@ -587,7 +585,7 @@ namespace Mirror.JlanSus
                 move(Vector3.zero);
             }
 
-            gameManager.GetComponent<GameManager>().CmdChangeState(GameState.Freeroam);
+            CmdChangeState(GameState.Freeroam);
         }
 
         // additively load other scenes for the task minigames
@@ -614,6 +612,7 @@ namespace Mirror.JlanSus
         void CloseMeeting() {
             StartCoroutine(UnloadScene("MeetingScene"));
             meetingLoaded = false;
+            meetingCalled = false;
         }
 
         IEnumerator UnloadScene(string oldSceneName)
@@ -672,10 +671,11 @@ namespace Mirror.JlanSus
                     if (isAlive) 
                     {
                         // check for meeting call
-                        if (Input.GetKey("1") && standingOnMeetingCall)
+                        if (Input.GetKey("1") && standingOnMeetingCall && !meetingCalled)
                         {
                             // call meeting
-                            gameManager.GetComponent<GameManager>().CmdChangeState(GameState.Meeting);
+                            meetingCalled = true;
+                            CmdChangeState(GameState.Meeting);
                             meetingLoaded = false;
                         }
                     } 
