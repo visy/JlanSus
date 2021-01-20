@@ -456,7 +456,7 @@ namespace Mirror.JlanSus
             SetRole();
         }
 
-        [Command]
+        [Command(ignoreAuthority = true)]
         void CmdSetNick(string n) 
         {
             nick = n;
@@ -469,7 +469,7 @@ namespace Mirror.JlanSus
         }
 
 
-        [Command]
+        [Command(ignoreAuthority = true)]
         void CmdSetRole(bool _isLanittaja) 
         {
             isLanittaja = _isLanittaja;
@@ -488,7 +488,7 @@ namespace Mirror.JlanSus
             }
         }
 
-        [Command]
+        [Command(ignoreAuthority = true)]
         void CmdKillPlayer() 
         {
             RpcKillPlayer();
@@ -499,6 +499,19 @@ namespace Mirror.JlanSus
         {
             isAlive = false;
             platformMask = 0;
+
+            if (isLocalPlayer) 
+            {
+                var c = GetComponent<SpriteRenderer>().color;
+                c.a = 0.3f;
+                GetComponent<SpriteRenderer>().color = c;
+            } 
+            else 
+            {
+                var c = GetComponent<SpriteRenderer>().color;
+                c.a = 0.0f;
+                GetComponent<SpriteRenderer>().color = c;
+            }
         }
 
         void OnCastVote(int vote) 
@@ -665,7 +678,11 @@ namespace Mirror.JlanSus
                             gameManager.GetComponent<GameManager>().CmdChangeState(GameState.Meeting);
                             meetingLoaded = false;
                         }
+                    } 
+                    else 
+                    {
                     }
+
                     
                 } 
 
@@ -686,10 +703,23 @@ namespace Mirror.JlanSus
 //                sign.GetComponent<TextMeshPro>().SetText(nick + (doingTask ? " / working:" + standingOnTaskNum : (standingOnTaskNum >= 0) ? " / onTask:" + standingOnTaskNum : standingOnMeetingCall ? " / call meeting" : ""));
 
                 sign.GetComponent<TextMeshPro>().SetText(nick + (!isAlive ? " (dead)" : ""));
-
+            }
+            else 
+            {
+                var sign = GetChildWithName(gameObject, "NameSign");
+                if (isAlive) 
+                {
+                    sign.GetComponent<TextMeshPro>().SetText(nick);
+                } 
+                else 
+                {
+                    if (sign.activeSelf)
+                    {
+                        sign.SetActive(false);
+                    }
+                }
             }
         }
-
 
        	#region Public
 
