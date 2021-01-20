@@ -491,13 +491,6 @@ namespace Mirror.JlanSus
             RpcCastVote(vote);
         }
 
-        [Command(ignoreAuthority = true)]
-        public void CmdUpdateVotes() 
-        {
-            if (!isServer) return;
-            gameManager.GetComponent<GameManager>().CheckVotes();
-        }
-
         [Command]
         void CmdChangeState(GameState newState) 
         {
@@ -531,7 +524,7 @@ namespace Mirror.JlanSus
         void RpcCastVote(int vote)
         {
             currentVote = vote;
-            CmdUpdateVotes();
+            gameManager.GetComponent<GameManager>().CheckVotes();
         }
 
         void OnTaskAbort(bool result) 
@@ -575,7 +568,6 @@ namespace Mirror.JlanSus
                 text.SetActive(false);
 
                 var resultGo = gameManager.GetComponent<GameManager>().MeetingResult;
-                Debug.Log(resultGo);
                 resultGo.SetActive(true);
 
                 var text2 = GetChildWithName(resultGo, "Text");

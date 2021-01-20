@@ -72,6 +72,8 @@ namespace Mirror.JlanSus
 
         public void CheckVotes() 
         {
+            if (!isServer) return;
+            
             var votes = new Dictionary<int,int>();
             for(var i = 0;i < 16;i++) 
             {
