@@ -29,11 +29,6 @@ namespace Mirror.JlanSus
                 new Vector3(Random.Range(s.rect.xMin, s.rect.xMax), Random.Range(s.rect.yMin, s.rect.yMax), 0) + s.transform.position, 
                 Quaternion.identity);
 
-            player.layer = 9; // players layer
-
-            // setup roles
-            player.GetComponent<JlanPlayer>().isLanittaja = true;
-
             NetworkServer.AddPlayerForConnection(conn, player);
 
 //                ball = Instantiate(spawnPrefabs.Find(prefab => prefab.name == "Ball"));

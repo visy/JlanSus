@@ -184,8 +184,12 @@ namespace Mirror.JlanSus
 
         public float speed = 30;
 
+        public float minKillDistance;
+
         private bool meetingLoaded = false;
         private bool meetingCalled = false;
+
+        private bool killingStarted = false;
 
         private Vector3 originalSpawnPos;
 
@@ -239,6 +243,21 @@ namespace Mirror.JlanSus
 
             Physics2D.IgnoreLayerCollision(9, 9);
             gameObject.layer = 9;
+
+            if (netId == 2) 
+            {
+                isLanittaja = false;
+                if (isLocalPlayer) 
+                {
+                    var text = GetChildWithName(gameObject, "ImpoPress1");
+                    text.GetComponent<TextMeshPro>().SetText("Press <color=\"red\">1</color> to eat");
+                    text.SetActive(true);
+                }
+            } 
+            else 
+            {
+                isLanittaja = true;
+            }
 
             if (isLocalPlayer) 
             {
@@ -486,6 +505,12 @@ namespace Mirror.JlanSus
         [Command]
         void CmdDropBody(int playerId)
         {
+            RpcDropBody(playerId);
+        }
+
+        [ClientRpc]
+        void RpcDropBody(int playerId)
+        {
             Vector3 pos = gameObject.transform.position;
             Quaternion rot = gameObject.transform.rotation;
 
@@ -673,27 +698,35 @@ namespace Mirror.JlanSus
                     rigidbody2d.freezeRotation = true;
                     gameObject.transform.rotation = Quaternion.identity;
 
+                    // START TASK
+
                     // check if pressing one, were are standing on valid task that has not yet been completed
-                    if (Input.GetKey("1") && standingOnTaskNum >= 0 && assignedTasks.Contains(standingOnTaskNum) && !completedTasks.Contains(standingOnTaskNum) && state == GameState.Freeroam)
+                    if (Input.GetKey("1") && standingOnTaskNum >= 0 && assignedTasks.Contains(standingOnTaskNum) && !completedTasks.Contains(standingOnTaskNum) && state == GameState.Freeroam && isLanittaja)
                     {
                         doingTask = true;
                         LoadTask();
                     }
 
-                    if (state == GameState.Freeroam) {
-                        if (isAlive) 
+                    if (state == GameState.Freeroam) 
+                    {
+                        // CALL MEETING
+                        if (Input.GetKey("1") && standingOnMeetingCall && !meetingCalled && isAlive)
                         {
-                            // check for meeting call
-                            if (Input.GetKey("1") && standingOnMeetingCall && !meetingCalled)
-                            {
-                                // call meeting
-                                meetingCalled = true;
-                                CmdChangeState(GameState.Meeting);
-                                meetingLoaded = false;
-                            }
-                        } 
-                        else 
+                            // call meeting
+                            meetingCalled = true;
+                            CmdChangeState(GameState.Meeting);
+                            meetingLoaded = false;
+                        }
+                    }
+
+                    if (!isLanittaja && state == GameState.Freeroam) 
+                    {
+                        // KILL AS IMPOSTOR
+                        if (Input.GetKey("1") && !killingStarted) 
                         {
+                            killingStarted = true;
+                            CheckPlayersCloseAndKill();
+                            killingStarted = false;
                         }
                     }
                 } 
@@ -729,6 +762,22 @@ namespace Mirror.JlanSus
                     {
                         sign.SetActive(false);
                     }
+                }
+            }
+        }
+
+        public void CheckPlayersCloseAndKill() 
+        {
+            var players = GameObject.FindGameObjectsWithTag("Player");
+
+            foreach (var player in players) 
+            {
+                JlanPlayer other = player.GetComponent<JlanPlayer>();
+                float dist = Vector3.Distance(other.gameObject.transform.position, gameObject.transform.position);
+                if (dist >= minKillDistance && other.netId != netId && other.isLanittaja && other.isAlive)
+                {
+                    other.RpcKillPlayer((int)other.netId);
+                    return;
                 }
             }
         }
