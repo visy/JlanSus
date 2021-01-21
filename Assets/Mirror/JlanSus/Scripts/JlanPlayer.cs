@@ -166,7 +166,7 @@ namespace Mirror.JlanSus
         [SyncVar(hook = "OnNick")]
         public string nick;
 
-        [SyncVar(hook = "OnRole")]
+        [SyncVar]
         public bool isLanittaja;
 
         [SyncVar]
@@ -239,19 +239,11 @@ namespace Mirror.JlanSus
 
         public override void OnStartClient() 
         {
+            isLanittaja = true;
             gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
 
             Physics2D.IgnoreLayerCollision(9, 9);
             gameObject.layer = 9;
-
-            if (netId == 2) 
-            {
-                isLanittaja = false;
-            } 
-            else 
-            {
-                isLanittaja = true;
-            }
 
             if (isLocalPlayer) 
             {
@@ -265,12 +257,6 @@ namespace Mirror.JlanSus
 
                 nick = PlayerPrefs.GetString("nick", "Defaultti");
                 SetNick();
-
-                if (!isLanittaja) 
-                {
-                    // hide lanittaja hud texts, show impostor ones
-                }
-
             } 
 
             CmdSetNick(nick);
@@ -465,11 +451,6 @@ namespace Mirror.JlanSus
             SetNick();
         }
 
-        public void OnRole(bool o, bool n)
-        {
-            SetRole();
-        }
-
         [Command(ignoreAuthority = true)]
         void CmdSetNick(string n) 
         {
@@ -484,14 +465,24 @@ namespace Mirror.JlanSus
 
 
         [Command(ignoreAuthority = true)]
-        void CmdSetRole(bool _isLanittaja) 
+        public void CmdSetRole(bool _isLanittaja) 
         {
-            isLanittaja = _isLanittaja;
+            RpcSetRole(_isLanittaja);
         }
 
-        void SetRole() 
+        [ClientRpc]
+        void RpcSetRole(bool _isLanittaja) 
         {
-            // role setup
+            isLanittaja = _isLanittaja;
+
+            if (isLocalPlayer) 
+            {
+                var resultGo = gameManager.Toaster;
+                resultGo.SetActive(true);
+
+                var text2 = GetChildWithName(resultGo, "Text");
+                text2.GetComponent<TextMeshProUGUI>().SetText(isLanittaja ? "You are a gamer." : "You are the impostor!");
+            }
         }
 
         [Command]
@@ -526,7 +517,7 @@ namespace Mirror.JlanSus
             RpcCastVote(vote);
         }
 
-        [Command]
+        [Command(ignoreAuthority = true)]
         void CmdChangeState(GameState newState) 
         {
             if (newState != gameManager.CurrentState)
@@ -557,36 +548,39 @@ namespace Mirror.JlanSus
                 GetComponent<SpriteRenderer>().color = c;
             }
 
-            var players = GameObject.FindGameObjectsWithTag("Player");
-            var lanittajaAliveCount = 0;
-            var impostorAliveCount = 0;
-            foreach (var p in players) 
+            if (isServer) 
             {
-                var player = p.GetComponent<JlanPlayer>();
-                if (player.isLanittaja && player.isAlive) 
+                var players = GameObject.FindGameObjectsWithTag("Player");
+                var lanittajaAliveCount = 0;
+                var impostorAliveCount = 0;
+                foreach (var p in players) 
                 {
-                    lanittajaAliveCount++;
+                    var player = p.GetComponent<JlanPlayer>();
+                    if (player.isLanittaja && player.isAlive) 
+                    {
+                        lanittajaAliveCount++;
+                    }
+                    if (!player.isLanittaja && player.isAlive) 
+                    {
+                        impostorAliveCount++;
+                    }
                 }
-                if (!player.isLanittaja && player.isAlive) 
+
+                Debug.Log("impostors alive: " + impostorAliveCount + " / lanittajat alive: " + lanittajaAliveCount);
+
+                // lanittajat wins
+                if (impostorAliveCount == 0 && lanittajaAliveCount > 0) 
                 {
-                    impostorAliveCount++;
+                    CmdChangeState(GameState.LanittajaWinEnd);
+                    return;
                 }
-            }
 
-            Debug.Log("impostors alive: " + impostorAliveCount + " / lanittajat alive: " + lanittajaAliveCount);
-
-            // lanittajat wins
-            if (impostorAliveCount == 0 && lanittajaAliveCount > 0) 
-            {
-                CmdChangeState(GameState.LanittajaWinEnd);
-                return;
-            }
-
-            // impostor win
-            if (impostorAliveCount >= lanittajaAliveCount)
-            {
-                CmdChangeState(GameState.ImpostorWinEnd);
-                return;
+                // impostor win
+                if (impostorAliveCount >= lanittajaAliveCount && impostorAliveCount > 0)
+                {
+                    CmdChangeState(GameState.ImpostorWinEnd);
+                    return;
+                }
             }
 
             if (leaveBody)
@@ -649,7 +643,7 @@ namespace Mirror.JlanSus
                 var text = GetChildWithName(gameObject, "TextPress1");
                 text.SetActive(false);
 
-                var resultGo = gameManager.MeetingResult;
+                var resultGo = gameManager.Toaster;
                 resultGo.SetActive(true);
 
                 var text2 = GetChildWithName(resultGo, "Text");

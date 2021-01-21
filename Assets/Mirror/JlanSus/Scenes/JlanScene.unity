@@ -121,6 +121,25 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &21584386 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7783442604767147031, guid: a15a0ad56f40afe4bae3bcf2df3f6983,
+    type: 3}
+  m_PrefabInstance: {fileID: 971678346}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &21584389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 21584386}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 600632203022ed9479041a0925b30d95, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameManager: {fileID: 1156121733}
 --- !u!1 &126582181
 GameObject:
   m_ObjectHideFlags: 0
@@ -348,7 +367,7 @@ PrefabInstance:
     - target: {fileID: 7783442604767147031, guid: c1e5f9c85fecdaf4bafac86ee582cef8,
         type: 3}
       propertyPath: m_Name
-      value: MeetingResult
+      value: Toaster
       objectReference: {fileID: 0}
     - target: {fileID: 7783442604767147031, guid: c1e5f9c85fecdaf4bafac86ee582cef8,
         type: 3}
@@ -576,11 +595,11 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   gameTime: 60
-  timer: 0
+  timer: -1
   minPlayers: 2
   masterTimer: 1
   _currentState: 0
-  MeetingResult: {fileID: 131012486}
+  Toaster: {fileID: 131012486}
 --- !u!114 &1156121734
 MonoBehaviour:
   m_ObjectHideFlags: 0

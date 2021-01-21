@@ -45,7 +45,7 @@ namespace Mirror.JlanSus
 
         GameManager serverTimer;
 
-        public GameObject MeetingResult;
+        public GameObject Toaster;
 
         void Start() 
         {
@@ -151,10 +151,44 @@ namespace Mirror.JlanSus
         public void RpcStateChange(GameState newState) 
         {
             if (!isServer) return;
+            if (_currentState == GameState.ImpostorWinEnd || _currentState == GameState.LanittajaWinEnd) return;
             _currentState = newState;
             timer = -1;
 
             Debug.Log("Changing state to: " + newState);
+        }
+
+        void AssignImpostors() 
+        {
+            var players = GameObject.FindGameObjectsWithTag("Player");
+
+            var numPlayers = players.Length;
+            var numImpostors = numPlayers <= 6 ? 1 : 2;
+
+            var impostors = new List<int>();
+
+            var prevRandom = -1;
+            for (var i = 0; i < numImpostors; i++) 
+            {
+                var randomIndex = prevRandom;
+                while (randomIndex == prevRandom) 
+                {
+                    randomIndex = UnityEngine.Random.Range(0,numPlayers-1);
+                }
+                Debug.Log("impo:" + randomIndex);
+                Debug.Log("le:" + numPlayers);
+                prevRandom = randomIndex;
+                players[randomIndex].GetComponent<JlanPlayer>().CmdSetRole(false);
+                impostors.Add(randomIndex);
+            }
+
+            for (var i = 0; i < numPlayers; i++) 
+            {
+                if (!impostors.Contains(i)) 
+                {
+                    players[i].GetComponent<JlanPlayer>().CmdSetRole(true);
+                }
+            }
         }
 
         void Update()
@@ -163,9 +197,12 @@ namespace Mirror.JlanSus
             if(masterTimer) // Only the MASTER timer controls the time
             { 
 
-                if (NetworkServer.connections.Count >= minPlayers && _currentState == GameState.Lobby) 
+                if (NetworkServer.connections.Count >= minPlayers && _currentState == GameState.Lobby && timer == -1) 
                 {
                     timer = 0;
+                    // game start on enough players joined
+                    AssignImpostors();
+
                     RpcStateChange(GameState.Freeroam);
                 }
 
@@ -173,13 +210,6 @@ namespace Mirror.JlanSus
                 {
                     timer = -2;
                 }
-                else if (timer == -1)
-                {
-                    if (NetworkServer.connections.Count >= minPlayers) 
-                    {
-                        timer = 0;
-                    }
-                } 
                 else if (timer == -2) // Game done.
                 {
                     
