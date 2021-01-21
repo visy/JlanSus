@@ -81,14 +81,21 @@ namespace Mirror.JlanSus
             }
 
             var voteCount = 0;
-            var playerCount = NetworkServer.connections.Count;
+            var aliveCount = 0;
 
             var players = GameObject.FindGameObjectsWithTag("Player");
 
-            foreach(var player in players) 
+            foreach(var p in players) 
             {
-                var voteIndex = player.GetComponent<JlanPlayer>().currentVote;
-                var nick = player.GetComponent<JlanPlayer>().nick;
+                var player = p.GetComponent<JlanPlayer>(); 
+                var voteIndex = player.currentVote;
+                var nick = player.nick;
+
+                if (player.isAlive)
+                {
+                    aliveCount++;
+                }
+
                 if (voteIndex >= 0) 
                 {
                     votes[voteIndex]++;
@@ -96,9 +103,9 @@ namespace Mirror.JlanSus
                 }
             }
 
-            Debug.Log("current votes given: " + voteCount + "/" + playerCount);
+            Debug.Log("current votes given: " + voteCount + "/" + aliveCount);
 
-            if (voteCount >= playerCount) 
+            if (voteCount >= aliveCount) 
             {
                 var largest = -1;
                 var largestIndex = -1;
@@ -112,7 +119,7 @@ namespace Mirror.JlanSus
 
                 var text = "";
 
-                if (largest > 0 && largestIndex > 0 && (float)largest > (float)(playerCount/2.0f)) 
+                if (largest > 0 && largestIndex > 0 && (float)largest > (float)(aliveCount/2.0f)) 
                 {
                     foreach(var player in players) 
                     {

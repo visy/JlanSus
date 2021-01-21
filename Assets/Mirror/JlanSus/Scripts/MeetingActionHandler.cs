@@ -28,9 +28,16 @@ public class MeetingActionHandler : MonoBehaviour
             if (index < players.Length) 
             {
                 var player = players[index].GetComponent<JlanPlayer>();
-                voteNum = (int)player.netId;
-        		btn.onClick.AddListener(CastVote);
-                btn.transform.GetChild(0).GetComponent<TextMeshProUGUI>().SetText("Vote " + player.nick);
+                if (player.isAlive) 
+                {
+                    voteNum = (int)player.netId;
+                    btn.onClick.AddListener(CastVote);
+                    btn.transform.GetChild(0).GetComponent<TextMeshProUGUI>().SetText("Vote " + player.nick);
+                }
+                else 
+                {
+                    btn.gameObject.SetActive(false);
+                }
             } 
             else 
             {

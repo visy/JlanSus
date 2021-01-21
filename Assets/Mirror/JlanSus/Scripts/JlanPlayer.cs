@@ -315,7 +315,7 @@ namespace Mirror.JlanSus
 
                 if (isLocalPlayer) 
                 {
-                    if (standingOnMeetingCall) 
+                    if (standingOnMeetingCall && isAlive && gameManager.CurrentState == GameState.Freeroam) 
                     {
                         var text = GetChildWithName(gameObject, "TextPress1");
                         text.GetComponent<TextMeshPro>().SetText("Press <color=\"red\">1</color> to call meeting");
@@ -330,7 +330,7 @@ namespace Mirror.JlanSus
 
                 if (isLocalPlayer) 
                 {
-                    if (isLanittaja && assignedTasks.Contains(standingOnTaskNum) && !completedTasks.Contains(standingOnTaskNum)) 
+                    if (isLanittaja && assignedTasks.Contains(standingOnTaskNum) && !completedTasks.Contains(standingOnTaskNum) && isAlive && gameManager.CurrentState == GameState.Freeroam) 
                     {
                         var text = GetChildWithName(gameObject, "TextPress1");
                         text.GetComponent<TextMeshPro>().SetText("Press <color=\"red\">1</color> to do task");
@@ -557,17 +557,54 @@ namespace Mirror.JlanSus
                 GetComponent<SpriteRenderer>().color = c;
             }
 
+            var players = GameObject.FindGameObjectsWithTag("Player");
+            var lanittajaAliveCount = 0;
+            var impostorAliveCount = 0;
+            foreach (var p in players) 
+            {
+                var player = p.GetComponent<JlanPlayer>();
+                if (player.isLanittaja && player.isAlive) 
+                {
+                    lanittajaAliveCount++;
+                }
+                if (!player.isLanittaja && player.isAlive) 
+                {
+                    impostorAliveCount++;
+                }
+            }
+
+            // lanittajat wins
+            if (impostorAliveCount == 0) 
+            {
+                CmdChangeState(GameState.End);
+                return;
+            }
+
+            // impostor win
+            if (impostorAliveCount >= (lanittajaAliveCount-impostorAliveCount))
+            {
+                CmdChangeState(GameState.End);
+                return;
+            }
+
             if (leaveBody)
             {
                 CmdDropBody(playerId);
+            } 
+            else 
+            {
+                CmdChangeState(GameState.Freeroam);
             }
         }
 
         [ClientRpc]
         void RpcCastVote(int vote)
         {
-            currentVote = vote;
-            gameManager.CheckVotes();
+            if (isAlive)
+            {
+                currentVote = vote;
+                gameManager.CheckVotes();
+            }
         }
 
         void OnTaskAbort(bool result) 
@@ -620,7 +657,11 @@ namespace Mirror.JlanSus
                 move(Vector3.zero);
             }
 
-            CmdChangeState(GameState.Freeroam);
+            // go to freeroam immediately, otherwise let the killplayer logic handle possible end condition
+            if (result.Contains("Nobody was evicted.")) 
+            {
+                CmdChangeState(GameState.Freeroam);
+            }
         }
 
         // additively load other scenes for the task minigames
