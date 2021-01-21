@@ -573,17 +573,19 @@ namespace Mirror.JlanSus
                 }
             }
 
+            Debug.Log("impostors alive: " + impostorAliveCount + " / lanittajat alive: " + lanittajaAliveCount);
+
             // lanittajat wins
-            if (impostorAliveCount == 0) 
+            if (impostorAliveCount == 0 && lanittajaAliveCount > 0) 
             {
-                CmdChangeState(GameState.End);
+                CmdChangeState(GameState.LanittajaWinEnd);
                 return;
             }
 
             // impostor win
-            if (impostorAliveCount >= (lanittajaAliveCount-impostorAliveCount))
+            if (impostorAliveCount >= lanittajaAliveCount))
             {
-                CmdChangeState(GameState.End);
+                CmdChangeState(GameState.ImpostorWinEnd);
                 return;
             }
 

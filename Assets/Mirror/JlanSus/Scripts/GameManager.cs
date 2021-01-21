@@ -12,7 +12,8 @@ namespace Mirror.JlanSus
         Freeroam,
         Meeting,
         Cutscene,
-        End,
+        ImpostorWinEnd,
+        LanittajaWinEnd,
     };
 
     public class GameManager : NetworkBehaviour 
