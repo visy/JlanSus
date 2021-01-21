@@ -583,7 +583,7 @@ namespace Mirror.JlanSus
             }
 
             // impostor win
-            if (impostorAliveCount >= lanittajaAliveCount))
+            if (impostorAliveCount >= lanittajaAliveCount)
             {
                 CmdChangeState(GameState.ImpostorWinEnd);
                 return;
