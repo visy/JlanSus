@@ -191,6 +191,9 @@ namespace Mirror.JlanSus
 
         private bool killingStarted = false;
 
+        private float killTimer = 0.0f;
+
+
         private Vector3 originalSpawnPos;
 
         [HideInInspector][NonSerialized]
@@ -746,6 +749,10 @@ namespace Mirror.JlanSus
                     {
                         // KILL AS IMPOSTOR
                         CheckPlayersCloseAndKill();
+                        if (killTimer > 0.0f) 
+                        {
+                            killTimer-=Time.fixedDeltaTime;
+                        }
                     }
 
                     if (state == GameState.Freeroam) 
@@ -820,8 +827,9 @@ namespace Mirror.JlanSus
                         text.SetActive(true);
                     }
 
-                    if (oneClose && pressingKey)
+                    if (oneClose && pressingKey && killTimer <= 0.0f)
                     {
+                        killTimer = 60.0f;
                         other.RpcKillPlayer((int)other.netId, true);
                         break;
                     }
