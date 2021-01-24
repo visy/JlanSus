@@ -11,9 +11,12 @@ class DragAndDrop : MonoBehaviour
     private bool onGoal = false;
     private float distance;
 
+    public Camera cam;
+
     void Start()
     {
         GetComponent<SpriteRenderer>().material.color = originalColor;
+        cam = GameObject.Find("TaskCamera").GetComponent<Camera>();
     }
 
     void OnMouseEnter()
@@ -30,7 +33,7 @@ class DragAndDrop : MonoBehaviour
     void OnMouseDown()
     {
         if (!onGoal) {
-            distance = Vector3.Distance(transform.position, Camera.main.transform.position);
+            distance = Vector3.Distance(transform.position, cam.transform.position);
             dragging = true;
         }
     }
@@ -51,6 +54,18 @@ class DragAndDrop : MonoBehaviour
             col.gameObject.SetActive(false);
 
             onGoal = true;
+
+            var goals = GameObject.FindGameObjectsWithTag("TaskGoal");
+            var allDone = true;
+            foreach (var goal in goals) 
+            {
+                if (!goal.GetComponent<DragAndDrop>().onGoal) allDone = false;
+            }
+
+            if (allDone)
+            {
+                Mirror.JlanSus.JlanPlayer.TaskComplete?.Invoke(true);
+            }
         }
     }
 
@@ -66,7 +81,7 @@ class DragAndDrop : MonoBehaviour
     {
         if (dragging && !onGoal)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Ray ray = cam.ScreenPointToRay(Input.mousePosition);
             Vector3 rayPoint = ray.GetPoint(distance);
             rayPoint.z = 0.9f;
             transform.position = rayPoint;

@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 114104497298166850}
   - component: {fileID: 114626868563338794}
   - component: {fileID: 114398896143473162}
+  - component: {fileID: 4801819823339764179}
   m_Layer: 0
   m_Name: JlanPlayer
   m_TagString: Player
@@ -167,6 +168,49 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
+  nick: 
+  isLanittaja: 0
+  currentVote: -1
+  isAlive: 1
+  hatName: none
+  standingOnTaskNum: -1
+  doingTask: 0
+  standingOnMeetingCall: 0
+  speed: 8
+  minKillDistance: 0.8
+  bodyPrefab: {fileID: 1240244544407914, guid: b5ca06b34c76deb4fa5a83d8a09e3e99, type: 3}
+--- !u!114 &114398896143473162
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1240244544407914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f74aedd71d9a4f55b3ce499326d45fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0
+  clientAuthority: 1
+  localPositionSensitivity: 0.01
+  localRotationSensitivity: 0.01
+  localScaleSensitivity: 0.01
+--- !u!114 &4801819823339764179
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1240244544407914}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebbb55b01cdc15444a85913e2d14d51a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
   ignoreOneWayPlatformsThisFrame: 0
   _skinWidth: 0.02
   platformMask:
@@ -215,35 +259,6 @@ MonoBehaviour:
     m_RotationOrder: 4
   totalHorizontalRays: 8
   totalVerticalRays: 4
-  nick: 
-  isLanittaja: 0
-  currentVote: -1
-  isAlive: 1
-  hatName: none
-  standingOnTaskNum: -1
-  doingTask: 0
-  standingOnMeetingCall: 0
-  speed: 8
-  minKillDistance: 0.8
-  bodyPrefab: {fileID: 1240244544407914, guid: b5ca06b34c76deb4fa5a83d8a09e3e99, type: 3}
---- !u!114 &114398896143473162
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1240244544407914}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2f74aedd71d9a4f55b3ce499326d45fb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  syncMode: 0
-  syncInterval: 0
-  clientAuthority: 1
-  localPositionSensitivity: 0.01
-  localRotationSensitivity: 0.01
-  localScaleSensitivity: 0.01
 --- !u!1 &3859240293798798092
 GameObject:
   m_ObjectHideFlags: 0

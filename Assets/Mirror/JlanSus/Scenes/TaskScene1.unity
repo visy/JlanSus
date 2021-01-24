@@ -266,7 +266,7 @@ GameObject:
   - component: {fileID: 377659416}
   m_Layer: 5
   m_Name: Square
-  m_TagString: Untagged
+  m_TagString: TaskGoal
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -348,6 +348,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   goalObject: {fileID: 1928809778}
+  cam: {fileID: 0}
 --- !u!60 &377659416
 PolygonCollider2D:
   m_ObjectHideFlags: 0
@@ -413,7 +414,7 @@ GameObject:
   - component: {fileID: 809640392}
   m_Layer: 5
   m_Name: Hexagon
-  m_TagString: Untagged
+  m_TagString: TaskGoal
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -495,6 +496,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   goalObject: {fileID: 1623987364}
+  cam: {fileID: 0}
 --- !u!60 &809640392
 PolygonCollider2D:
   m_ObjectHideFlags: 0
@@ -558,7 +560,7 @@ GameObject:
   - component: {fileID: 1004496183}
   - component: {fileID: 1004496182}
   m_Layer: 0
-  m_Name: Main Camera
+  m_Name: TaskCamera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -771,7 +773,7 @@ GameObject:
   - component: {fileID: 1658792746}
   m_Layer: 5
   m_Name: Triangle
-  m_TagString: Untagged
+  m_TagString: TaskGoal
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -853,6 +855,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   goalObject: {fileID: 1891044403}
+  cam: {fileID: 0}
 --- !u!60 &1658792746
 PolygonCollider2D:
   m_ObjectHideFlags: 0
