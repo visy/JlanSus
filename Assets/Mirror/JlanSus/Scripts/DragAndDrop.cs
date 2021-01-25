@@ -13,14 +13,23 @@ class DragAndDrop : MonoBehaviour
 
     public Camera cam;
 
+    private Vector3 spawnpos;
+    private Quaternion spawnrot;
+
     void Start()
     {
         GetComponent<SpriteRenderer>().material.color = originalColor;
         cam = GameObject.Find("TaskCamera").GetComponent<Camera>();
+
+        spawnpos = transform.position;
+        spawnrot = transform.rotation;
+
+        Respawn();
     }
 
     void OnMouseEnter()
     {
+        if (onGoal) return;
         if (!onGoal) GetComponent<SpriteRenderer>().material.color = mouseOverColor;
     }
  
@@ -32,10 +41,10 @@ class DragAndDrop : MonoBehaviour
  
     void OnMouseDown()
     {
-        if (!onGoal) {
-            distance = Vector3.Distance(transform.position, cam.transform.position);
-            dragging = true;
-        }
+        if (onGoal) return;
+
+        distance = Vector3.Distance(transform.position, cam.transform.position);
+        dragging = true;
     }
  
     void OnMouseUp()
@@ -45,6 +54,8 @@ class DragAndDrop : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D col)
     {
+        if (onGoal) return;
+
         if (col.gameObject == goalObject && Vector2.Distance(col.gameObject.transform.position,transform.position) < 4.5)
         {
             GetComponent<Rigidbody2D>().constraints = RigidbodyConstraints2D.FreezeAll;
@@ -67,14 +78,29 @@ class DragAndDrop : MonoBehaviour
                 Mirror.JlanSus.JlanPlayer.TaskComplete?.Invoke(true);
             }
         }
+
+        if (onGoal) GetComponent<SpriteRenderer>().material.color = goalColor;
+        else GetComponent<SpriteRenderer>().material.color = originalColor;
     }
 
     void OnCollisionExit2D(Collision2D col)
     {
-        if (col.gameObject == goalObject)
-        {
-            onGoal = false;
-        }
+        if (onGoal) return;
+    }
+
+    void OnBecameInvisible()
+    {
+        Respawn();
+    }
+
+    void Respawn() 
+    {
+        spawnpos.x = Random.Range(-8,8);
+        spawnpos.y = 9;
+        spawnpos.z = 0.9f;
+        transform.position = spawnpos;
+        transform.rotation = spawnrot;
+        GetComponent<Rigidbody2D>().velocity = Vector3.zero; 
     }
 
     void Update()
