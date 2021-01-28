@@ -527,8 +527,8 @@ namespace Mirror.JlanSus
             {
                 var pos = gameObject.transform.position;
 
-//                pos.x-=(originalSpawnPos.x+minimapOffset.x);
-//                pos.y-=(originalSpawnPos.y+minimapOffset.y);
+                pos.x-=(originalSpawnPos.x+minimapOffset.x);
+                pos.y-=(originalSpawnPos.y+minimapOffset.y);
                 pos = Vector3.Scale(pos, new Vector3(1.0f/minimapFactor.x,1.0f/minimapFactor.y,1.0f));
                 pos.z = 0.0f;
 
