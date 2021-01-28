@@ -34,6 +34,9 @@ namespace Mirror.JlanSus
 
         public float minKillDistance;
 
+        private Vector2 minimapFactor = new Vector2(0.093f,0.091f);
+        private Vector2 minimapOffset = new Vector2(0.0f, 0.0f);
+
         private bool meetingLoaded = false;
         private bool meetingCalled = false;
 
@@ -107,7 +110,7 @@ namespace Mirror.JlanSus
                 pos.z = -10;
                 cam.transform.position = pos;
 
-                minimap = GameObject.Find("minigrid");
+                minimap = GameObject.Find("PlayerBlip");
 
                 nick = PlayerPrefs.GetString("nick", "Defaultti");
                 SetNick();
@@ -500,10 +503,12 @@ namespace Mirror.JlanSus
             {
                 var pos = gameObject.transform.position;
 
-                pos = Vector3.Scale(pos, new Vector3(0.08f,0.08f,1.0f));
+                pos.x-=(originalSpawnPos.x+minimapOffset.x);
+                pos.y-=(originalSpawnPos.y+minimapOffset.y);
+                pos = Vector3.Scale(pos, new Vector3(1.0f/minimapFactor.x,1.0f/minimapFactor.y,1.0f));
                 pos.z = 0.0f;
 
-                minimap.transform.localPosition = -pos;
+                minimap.transform.localPosition = pos;
             }
         }
 
