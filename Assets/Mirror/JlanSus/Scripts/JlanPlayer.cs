@@ -36,7 +36,7 @@ namespace Mirror.JlanSus
 
         public float minKillDistance;
 
-        private Vector2 minimapFactor = new Vector2(0.08f,0.08f);
+        private Vector2 minimapFactor = new Vector2(0.093f,0.091f);
         private Vector2 minimapOffset = new Vector2(0.0f, 0.0f);
 
         private bool meetingLoaded = false;
