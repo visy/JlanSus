@@ -41,7 +41,6 @@ namespace SuperTiled2Unity
         [ReadOnly]
         public bool m_Infinite;
 
-        [ReadOnly]
         public Color m_BackgroundColor;
 
         [ReadOnly]
