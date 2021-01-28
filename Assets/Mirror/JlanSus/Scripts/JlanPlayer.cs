@@ -82,6 +82,8 @@ namespace Mirror.JlanSus
 
         public GameObject bodyPrefab;
 
+        private GameObject minimap = null;
+
         public override void OnStartServer() 
         {
             base.OnStartServer();
@@ -104,6 +106,8 @@ namespace Mirror.JlanSus
                 var pos = gameObject.transform.position;
                 pos.z = -10;
                 cam.transform.position = pos;
+
+                minimap = GameObject.Find("minigrid");
 
                 nick = PlayerPrefs.GetString("nick", "Defaultti");
                 SetNick();
@@ -490,6 +494,19 @@ namespace Mirror.JlanSus
             }
         }
 
+        void UpdateMinimap() 
+        {
+            if (minimap != null) 
+            {
+                var pos = gameObject.transform.position;
+
+                pos = Vector3.Scale(pos, new Vector3(0.08f,0.08f,1.0f));
+                pos.z = 0.0f;
+
+                minimap.transform.localPosition = -pos;
+            }
+        }
+
         // need to use FixedUpdate for rigidbody
         void FixedUpdate()
         {
@@ -518,6 +535,8 @@ namespace Mirror.JlanSus
     //                rigidbody2d.velocity = move;
                     GetComponent<CharacterController2D>().rigidbody2d.freezeRotation = true;
                     gameObject.transform.rotation = Quaternion.identity;
+
+                    UpdateMinimap();
 
                     // START TASK
 
