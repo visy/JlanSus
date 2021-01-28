@@ -23,6 +23,8 @@ namespace Mirror.JlanSus
         [SyncVar]
         public bool isAlive = true;
 
+        public bool usingMap = false;
+
         public string hatName;
 
         public int standingOnTaskNum = -1;
@@ -34,7 +36,7 @@ namespace Mirror.JlanSus
 
         public float minKillDistance;
 
-        private Vector2 minimapFactor = new Vector2(0.093f,0.091f);
+        private Vector2 minimapFactor = new Vector2(0.08f,0.08f);
         private Vector2 minimapOffset = new Vector2(0.0f, 0.0f);
 
         private bool meetingLoaded = false;
@@ -85,7 +87,9 @@ namespace Mirror.JlanSus
 
         public GameObject bodyPrefab;
 
+        //minimap
         private GameObject minimap = null;
+        private GameObject playerblip = null;
 
         public override void OnStartServer() 
         {
@@ -110,7 +114,11 @@ namespace Mirror.JlanSus
                 pos.z = -10;
                 cam.transform.position = pos;
 
-                minimap = GameObject.Find("PlayerBlip");
+                minimap = GameObject.Find("minimap");
+                playerblip = GameObject.Find("PlayerBlip");
+
+                minimap.SetActive(false);
+                playerblip.SetActive(false);
 
                 nick = PlayerPrefs.GetString("nick", "Defaultti");
                 SetNick();
@@ -497,18 +505,34 @@ namespace Mirror.JlanSus
             }
         }
 
+        void ShowMap() 
+        {
+            usingMap = true;
+
+            minimap.SetActive(true);
+            playerblip.SetActive(true);
+        }
+
+        void HideMap() 
+        {
+            usingMap = false;
+
+            minimap.SetActive(false);
+            playerblip.SetActive(false);
+        }
+
         void UpdateMinimap() 
         {
-            if (minimap != null) 
+            if (playerblip != null) 
             {
                 var pos = gameObject.transform.position;
 
-                pos.x-=(originalSpawnPos.x+minimapOffset.x);
-                pos.y-=(originalSpawnPos.y+minimapOffset.y);
+//                pos.x-=(originalSpawnPos.x+minimapOffset.x);
+//                pos.y-=(originalSpawnPos.y+minimapOffset.y);
                 pos = Vector3.Scale(pos, new Vector3(1.0f/minimapFactor.x,1.0f/minimapFactor.y,1.0f));
                 pos.z = 0.0f;
 
-                minimap.transform.localPosition = pos;
+                playerblip.transform.localPosition = pos;
             }
         }
 
@@ -550,6 +574,17 @@ namespace Mirror.JlanSus
                     {
                         doingTask = true;
                         LoadTask();
+                    }
+
+                    // MAP
+
+                    if (Input.GetKey("2") && (state == GameState.Freeroam || state == GameState.Lobby)) 
+                    {
+                        ShowMap();
+                    } 
+                    else
+                    {
+                        HideMap();    
                     }
 
                     if (!isLanittaja && state == GameState.Freeroam && !standingOnMeetingCall) 
